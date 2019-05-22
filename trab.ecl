@@ -1,6 +1,5 @@
 :- lib(ic).
 :- lib(ic_cumulative).
-:- lib(branch_and_bound).
 
 
 
@@ -104,14 +103,3 @@ getTrabalhadores([],[]).
 getTrabalhadores([evento(I,_)|REventos],[Ti|RTrab]) :-
      tarefa(I,_,_,Ti),
      getTrabalhadores(REventos,RTrab).
-
-
-
-
-
-
-
-
-
-
-
