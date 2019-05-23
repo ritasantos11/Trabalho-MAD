@@ -1,10 +1,3 @@
-% Trabalho realizado por:
-% Ana Rita Costa, up2016605706
-% João Vasco Semblano, up201605518
-% Marcelo Martins Silva, up201604395
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%55555555%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 :- lib(ic).
 :- lib(ic_cumulative).
