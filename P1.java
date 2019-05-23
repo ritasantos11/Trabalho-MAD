@@ -1,21 +1,3 @@
-/*
-Example input:
-
-JAVA
-
-X
-ID Lsize li..Lj Dur Ntrab
-ID Lsize li..Lj Dur Ntrab
-
-
-X = nº de tarefas
-ID = id da tarefa
-Lsize = tamanho da lista de tarefas que só podem ter início depois da tarefa "ID" estar concluída
-li..lj = ID's das várias tarefas que só podem ter início depois da tarefa "ID" estar concluída
-Dur = Duração da tarefa
-Ntrab = Nº de trabalhadores necessários para concluir a tarefa
-
-*/
 
 import java.util.*;
 
@@ -33,9 +15,8 @@ class Arco {
 
 
 class No {
-    //int label;
     LinkedList<Arco> adjs;
-    int duracao=0, trabalhadores=0, numomento=0;
+    int duracao=0, trabalhadores=0;
 
     No() {
         adjs = new LinkedList<Arco>();
@@ -81,22 +62,55 @@ class Evento {
         return "(" + id + "," + data + "," + flag + ")";
     }
 
-    public static LinkedList<Evento> ordenar(LinkedList<Evento> evento) {
-        Collections.sort(evento, new Comparator<Evento>() {
+    // ordena os tuplos da LinkedList<Evento> conforme o 2º elemento do tuplo (a data da tarefa)
+    public static LinkedList<Evento> ordenar(LinkedList<Evento> eventos) {
+        Collections.sort(eventos, new Comparator<Evento>() {
             @Override
             public int compare(Evento evento1, Evento evento2) {
                 return evento1.data - evento2.data;
             }
         });
 
-        return evento;
+        return eventos;
     }
 }
 
 
 class P1 {
+    // calcula o número mínimo de trabalhadores a contratar
+    public static int numTrabalhadores(Grafo g, LinkedList<Evento> eventos) {
+        int numT=0, max=numT, segundo, data, v;
+        Evento evento = eventos.remove();
+        
+        while (!eventos.isEmpty()) {
+            segundo = evento.data;
+            data = segundo;
+
+            while (segundo == data && !eventos.isEmpty()) {    
+                v = evento.id;
+            
+                if (evento.flag==0)
+                    numT += g.verts[v].trabalhadores;
+
+                else
+                    numT -= g.verts[v].trabalhadores;
+
+                evento = eventos.remove();
+                data = evento.data;
+            }
+            
+            if (numT>max)
+                max=numT;
+
+        }
+
+        return max;
+    }
+
+
+
     public static void projeto(Grafo g, Grafo gt) {
-        // duração do caminho mínimo
+        // método do caminho crítico (nó-atividade) - earliest start
         int numVerts = g.nvs;
         int es[] = new int[numVerts+1];
         int prec[] = new int[numVerts+1];
@@ -151,15 +165,14 @@ class P1 {
             }
         }
 
-        System.out.println("Duração Mínima do projeto: " + durMin);
-        dur = durMin; //Duração mínima
+        System.out.println("Duração mínima do projeto: " + durMin);
 
 
 
 
         
 
-        // num trabalhadores
+        // nº trabalhadores a contratar
         LinkedList<Evento> eventos = new LinkedList<Evento>();
         int ef[] = new int[numVerts+1];
         for (v=1; v<=numVerts; v++) {
@@ -173,40 +186,15 @@ class P1 {
 
     
         LinkedList<Evento> eventosOrdenados = Evento.ordenar(eventos);
-
-        int numT=0, max=numT, segundo, data;
-        Evento evento = eventosOrdenados.remove();
-        while (!eventosOrdenados.isEmpty()) {
-            segundo = evento.data;
-            data = segundo;
-
-            while (segundo == data && !eventosOrdenados.isEmpty()) {    
-                v = evento.id;
-            
-                if (evento.flag==0)
-                    numT += g.verts[v].trabalhadores;
-
-                else
-                    numT -= g.verts[v].trabalhadores;
-
-                evento = eventosOrdenados.remove();
-                data = evento.data;
-            }
-            
-            if (numT>max)
-                max=numT;
-
-        }
-
-        System.out.println("Número de trabalhadores necessários: " + max);
-
-        high = max;
+        int max = numTrabalhadores(g,eventosOrdenados);
+        System.out.println("Número mínimo de trabalhadores a contratar: " + max);
 
 
 
 
 
-        // num min trabalhadores para as atividades críticas
+
+        // nº de trabalhadores para as atividades críticas
         int lf[] = new int[numVerts+1];
         int grauS[] = new int[numVerts+1];
         for (v=1; v<=numVerts; v++) {
@@ -267,82 +255,25 @@ class P1 {
         }
 
         LinkedList<Evento> criticasOrdenadas = Evento.ordenar(atvCriticas);
-        int numTAC=0, maxAC=numTAC;
-        Evento acritica = criticasOrdenadas.remove();
-        while (!criticasOrdenadas.isEmpty()) {
-            segundo = acritica.data;
-            data = segundo;
-
-            while (segundo == data && !criticasOrdenadas.isEmpty()) {    
-                v = acritica.id;
-            
-                if (acritica.flag==0)
-                    numTAC += g.verts[v].trabalhadores;
-
-                else
-                    numTAC -= g.verts[v].trabalhadores;
-
-
-                acritica = criticasOrdenadas.remove();
-                data = acritica.data;
-            }
-            
-            if (numTAC>maxAC)
-                maxAC = numTAC;
-        }
-
-        
-        System.out.println("Número de trabalhadores para as atividades críticas " + maxAC);
-            
+        int maxAC = numTrabalhadores(g,criticasOrdenadas);        
+        System.out.println("Número mínimo de trabalhadores para as atividades críticas " + maxAC);   
 
     }
 
 
 
 
-
-    static int high; //número mínimo de trabalhadores - earliest start
-    static int low;  //número mínimo de trabalhadores - tarefas críticas
-    static int dur;  //duração mínima
-    
-    static int trab; //número mínimo de trabalhadores
-
-    static void binarySearch(Grafo g) {
-        int top = high;
-        int bot = low;
-
-        for(int i = 1; i <= g.nvs; i++) {
-            if(g.verts[i].trabalhadores>bot)
-                bot = g.verts[i].trabalhadores;
-        }
-
-        trab = bot + (top - bot) / 2;
-
-        while(bot <= top) {
-            int mid = bot + (top - bot) / 2;
-            boolean sucesso = getSol(g, mid);
-            if(sucesso) {
-                trab = mid;
-                top = mid - 1;
-            }
-            else
-                bot = mid + 1;
-        }
-    }
-    
-    static boolean getSol(Grafo g, int val) {
-        return true;
-    }
 
     public static void main(String[] args) {
         Scanner stdin = new Scanner(System.in);
 
         int numVerts = stdin.nextInt();
         Grafo g = new Grafo(numVerts);
+        // grafo transposto de g
         Grafo gt = new Grafo(numVerts);
 
         for (int i=1; i<=numVerts; i++) {
-            int noA = stdin.nextInt();      //t1 tarefa
+            int noA = stdin.nextInt();      //tarefa t1
 
             int numSuc = stdin.nextInt();   //numero de tarefas em espera
             for (int j=0; j<numSuc; j++) {
@@ -361,7 +292,5 @@ class P1 {
         }
 
         projeto(g,gt);
-
-
     }
 }
