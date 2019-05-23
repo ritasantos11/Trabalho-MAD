@@ -8,9 +8,9 @@ proj(FileDados) :-
      findall(I,tarefa(I,_,_,_),Nos),
      length(Nos,N),
      length(ES,N),
+     zip(Nos,ES,Eventos),
      maxDuracao(Nos,MaxDuracao),
      [DurMin|ES] #:: 0..MaxDuracao,
-     zip(Nos,ES,Eventos),
      prec_constrs(Nos,Eventos,DurMin),
      get_min(DurMin,DurMin),
      writeln("Duração Mínima do projeto" : DurMin),
@@ -26,25 +26,25 @@ maxDuracao([I|RNos],MaxDuracao) :-
 
 % cria uma lista de tuplos evento(IdTarefa,ESTarefa) para cada tarefa com a data de início mais próxima
 zip([],[],[]).
-zip([I|Nos], [ESi|ES], [evento(I,ESi)|R]) :-
-     zip(Nos,ES,R).
+zip([I|Nos], [ESi|ES], [evento(I,ESi)|REventos]) :-
+     zip(Nos,ES,REventos).
 
 % restringe o valor que a duração do projeto pode tomar e que a data de inicío mais próxima cada tarefa pode ser
 prec_constrs([],_,_).
-prec_constrs([I|RNos],R,DurMin) :-
-     getES(I,R,evento(I,ESi)),
+prec_constrs([I|RNos],Eventos,DurMin) :-
+     getES(I,Eventos,evento(I,ESi)),
      tarefa(I,LTSegs,Di,_),
-     prec_constrs_(LTSegs,R,ESi,Di),
+     prec_constrs_(LTSegs,Eventos,ESi,Di),
      ESi+Di #=< DurMin,
-     prec_constrs(RNos,R,DurMin).
+     prec_constrs(RNos,Eventos,DurMin).
 
 prec_constrs_([],_,_,_).
-prec_constrs_([J|RTSegs],R,ESi,Di) :-
-     getES(J,R,evento(J,ESj)),
+prec_constrs_([J|RTSegs],Eventos,ESi,Di) :-
+     getES(J,Eventos,evento(J,ESj)),
      ESi+Di #=< ESj,
-     prec_constrs_(RTSegs,R,ESi,Di).
+     prec_constrs_(RTSegs,Eventos,ESi,Di).
 
-% retira da lista de tuplos evento(Id,ES) a data de início mais próxima de cada tarefa
+% retira da lista de tuplos evento(Id,ES) o earliest start de cada tarefa
 getES(_,[],_).
 getES(I,[evento(I,ESi)|_],evento(I,ESi)) :- !.
 getES(I,[_|R],X) :-
@@ -74,9 +74,9 @@ numTrabCriticas(Eventos,Criticas) :-
 
 % cria lista de tuplos evento(Id,ES) só para as atividades críticas
 getAtCriticas([],[]).
-getAtCriticas([evento(I,DataI)|REventos],[evento(I,DataI)|RCriticas]) :-
+getAtCriticas([evento(I,ESi)|REventos],[evento(I,ESi)|RCriticas]) :-
      % arranjar a atividade que só pode ter uma data de início mais próxima -> atividade crítica
-     get_domain_size(DataI,1),
+     get_domain_size(ESi,1),
      getAtCriticas(REventos,RCriticas).
 getAtCriticas([_|REventos],Criticas) :-
      getAtCriticas(REventos,Criticas).
@@ -87,10 +87,10 @@ getData([evento(_,ES)|REventos]) :-
      get_min(ES,ES),
      getData(REventos).
 
-% cria lista com as datas de todas as tarefas
+% cria lista com as datas de início mais próxima de todas as tarefas
 getDatas([],[]).
-getDatas([evento(I,DataI)|REventos],[DataI|RDatas]) :-
-     getDatas(REventos,RDatas).
+getDatas([evento(I,ESi)|REventos],[ESi|RESs]) :-
+     getDatas(REventos,RESs).
 
 % cria lista com as durações de todas as tarefas
 getDuracoes([],[]).
@@ -103,3 +103,4 @@ getTrabalhadores([],[]).
 getTrabalhadores([evento(I,_)|REventos],[Ti|RTrab]) :-
      tarefa(I,_,_,Ti),
      getTrabalhadores(REventos,RTrab).
+
