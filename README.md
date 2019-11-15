@@ -1,4 +1,4 @@
-### Trabalho de MAD
+## Trabalho de MAD
 
-## Java:
+### Java:
 Método do caminho crítico (Modelo Nó-Atividade) - earliest start
